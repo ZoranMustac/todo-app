@@ -1,6 +1,6 @@
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import React, { FC, ReactElement } from 'react';
-import customTheme from './theme/customTheme.ts';
+import { customTheme } from './theme/customTheme.ts';
 import { Dashboard } from './pages/dashboard/dashboard.tsx';
 
 const App: FC = (): ReactElement => {
