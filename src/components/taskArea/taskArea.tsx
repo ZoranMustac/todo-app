@@ -1,4 +1,9 @@
-import React, { FC, ReactElement } from 'react';
+import React, {
+    FC,
+    ReactElement,
+    useContext,
+    useEffect,
+} from 'react';
 import {
     Box,
     Grid,
@@ -17,8 +22,13 @@ import { ITaskApi } from '../../Interfaces/ITaskApi';
 import { Status } from '../createTaskForm/enums/Status';
 import { IUpdateTask } from '../../Interfaces/IUpdateTask';
 import { countTasks } from './helpers/countTasks';
+import { TaskStatusChangeContext } from '../../context';
 
 export const TaskArea: FC = (): ReactElement => {
+    const taskUpdatedContext = useContext(
+        TaskStatusChangeContext,
+    );
+
     const { error, isLoading, data, refetch } = useQuery(
         ['tasks'],
         async () => {
@@ -38,6 +48,16 @@ export const TaskArea: FC = (): ReactElement => {
                 data,
             ),
     );
+
+    useEffect(() => {
+        refetch();
+    }, [taskUpdatedContext.updated]);
+
+    useEffect(() => {
+        if (updateTaskMutation.isSuccess) {
+            taskUpdatedContext.toggle();
+        }
+    }, [updateTaskMutation.isSuccess]);
 
     function onStatusChangeHandler(
         e: React.ChangeEvent<HTMLInputElement>,
