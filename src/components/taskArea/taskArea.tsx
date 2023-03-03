@@ -8,9 +8,14 @@ import {
 import { format } from 'date-fns';
 import { TaskCounter } from '../taskCounter/taskCounter';
 import { Task } from '../task/task';
-import { useQuery } from '@tanstack/react-query';
+import {
+    useQuery,
+    useMutation,
+} from '@tanstack/react-query';
 import { sendApiRequest } from '../../helpers/sendApiRequst';
 import { ITaskApi } from '../../Interfaces/ITaskApi';
+import { Status } from '../createTaskForm/enums/Status';
+import { IUpdateTask } from '../../Interfaces/IUpdateTask';
 
 export const TaskArea: FC = (): ReactElement => {
     const { error, isLoading, data, refetch } = useQuery(
@@ -22,6 +27,28 @@ export const TaskArea: FC = (): ReactElement => {
             );
         },
     );
+
+    //Update task mutation
+    const updateTaskMutation = useMutation(
+        (data: IUpdateTask) =>
+            sendApiRequest(
+                'http://localhost:3200/tasks',
+                'PUT',
+                data,
+            ),
+    );
+
+    function onStatusChangeHandler(
+        e: React.ChangeEvent<HTMLInputElement>,
+        id: string,
+    ) {
+        updateTaskMutation.mutate({
+            id,
+            status: e.target.checked
+                ? Status.inProgress
+                : Status.todo,
+        });
+    }
 
     return (
         <Grid item md={8} px={4}>
@@ -82,26 +109,40 @@ export const TaskArea: FC = (): ReactElement => {
                             data.length > 0 &&
                             data.map((each, index) => {
                                 return (
-                                    <Task
-                                        key={
-                                            index +
-                                            each.priority
-                                        }
-                                        id={each.id}
-                                        title={each.title}
-                                        date={
-                                            new Date(
-                                                each.date,
-                                            )
-                                        }
-                                        description={
-                                            each.description
-                                        }
-                                        priority={
-                                            each.priority
-                                        }
-                                        status={each.status}
-                                    />
+                                    each.status ===
+                                        Status.todo ||
+                                    (each.status ===
+                                    Status.inProgress ? (
+                                        <Task
+                                            key={
+                                                index +
+                                                each.priority
+                                            }
+                                            id={each.id}
+                                            title={
+                                                each.title
+                                            }
+                                            date={
+                                                new Date(
+                                                    each.date,
+                                                )
+                                            }
+                                            description={
+                                                each.description
+                                            }
+                                            priority={
+                                                each.priority
+                                            }
+                                            status={
+                                                each.status
+                                            }
+                                            onStatusChange={
+                                                onStatusChangeHandler
+                                            }
+                                        />
+                                    ) : (
+                                        false
+                                    ))
                                 );
                             })
                         )}
