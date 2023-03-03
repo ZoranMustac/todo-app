@@ -1,4 +1,9 @@
-import React, { FC, ReactElement, useState } from 'react';
+import React, {
+    FC,
+    ReactElement,
+    useState,
+    useEffect,
+} from 'react';
 import {
     Box,
     Typography,
@@ -14,6 +19,9 @@ import { TaskDateField } from './_taskDateField';
 import { TaskSelectField } from './_taskSelectField';
 import { Status } from './enums/Status';
 import { Priority } from './enums/Priority.ts';
+import { useMutation } from '@tanstack/react-query';
+import { sendApiRequest } from '../../helpers/sendApiRequst.ts';
+import { ICreateTask } from '../../Interfaces/ICreateTask.ts';
 
 export const CreateTaskForm: FC = (): ReactElement => {
     //declare component states
@@ -32,6 +40,48 @@ export const CreateTaskForm: FC = (): ReactElement => {
     const [priority, setPriority] = useState<string>(
         Priority.normal,
     );
+    const [showSuccess, setShowSuccess] =
+        useState<boolean>(false);
+
+    //Create task mutation
+    const createTaskMutation = useMutation(
+        (data: ICreateTask) =>
+            sendApiRequest(
+                'http://localhost:3200/tasks',
+                'POST',
+                data,
+            ),
+    );
+
+    function createTaskHandler() {
+        if (!title || !date || !description) {
+            return;
+        }
+
+        const task: ICreateTask = {
+            title,
+            description,
+            date: date.toString(),
+            status,
+            priority,
+        };
+
+        createTaskMutation.mutate(task);
+    }
+
+    useEffect(() => {
+        if (createTaskMutation.isSuccess) {
+            setShowSuccess(true);
+        }
+
+        const successTimeout = setTimeout(() => {
+            setShowSuccess(false);
+        }, 7000);
+
+        return () => {
+            clearTimeout(successTimeout);
+        };
+    }, [createTaskMutation.isSuccess]);
 
     return (
         <Box
@@ -42,13 +92,19 @@ export const CreateTaskForm: FC = (): ReactElement => {
             px={4}
             my={6}
         >
-            <Alert
-                severity="success"
-                sx={{ width: '100%', marginBottom: '16px' }}
-            >
-                <AlertTitle>Success</AlertTitle>
-                The task has been created successfully
-            </Alert>
+            {showSuccess && (
+                <Alert
+                    severity="success"
+                    sx={{
+                        width: '100%',
+                        marginBottom: '16px',
+                    }}
+                >
+                    <AlertTitle>Success</AlertTitle>
+                    The task has been created successfully
+                </Alert>
+            )}
+
             <Typography mb={2} component="h2" variant="h6">
                 Create a task
             </Typography>
@@ -58,15 +114,18 @@ export const CreateTaskForm: FC = (): ReactElement => {
                     onChange={(e) =>
                         setTitle(e.target.value)
                     }
+                    disabled={createTaskMutation.isLoading}
                 />
                 <TaskDescriptionField
                     onChange={(e) =>
                         setDescription(e.target.value)
                     }
+                    disabled={createTaskMutation.isLoading}
                 />
                 <TaskDateField
                     value={date}
                     onChange={(date) => setDate(date)}
+                    disabled={createTaskMutation.isLoading}
                 />
                 <Stack
                     sx={{ width: '100%' }}
@@ -76,6 +135,9 @@ export const CreateTaskForm: FC = (): ReactElement => {
                     <TaskSelectField
                         label="Status"
                         name="status"
+                        disabled={
+                            createTaskMutation.isLoading
+                        }
                         value={status}
                         onChange={(e) =>
                             setStatus(
@@ -96,6 +158,9 @@ export const CreateTaskForm: FC = (): ReactElement => {
                     <TaskSelectField
                         label="Priority"
                         name="priority"
+                        disabled={
+                            createTaskMutation.isLoading
+                        }
                         value={priority}
                         onChange={(e) =>
                             setPriority(
@@ -118,8 +183,18 @@ export const CreateTaskForm: FC = (): ReactElement => {
                         ]}
                     />
                 </Stack>
-                <LinearProgress />
+                {createTaskMutation.isLoading && (
+                    <LinearProgress />
+                )}
                 <Button
+                    disabled={
+                        !title ||
+                        !description ||
+                        !date ||
+                        !status ||
+                        !priority
+                    }
+                    onClick={createTaskHandler}
                     variant="contained"
                     size="large"
                     fullWidth
