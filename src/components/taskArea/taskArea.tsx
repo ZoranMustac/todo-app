@@ -16,6 +16,7 @@ import { sendApiRequest } from '../../helpers/sendApiRequst';
 import { ITaskApi } from '../../Interfaces/ITaskApi';
 import { Status } from '../createTaskForm/enums/Status';
 import { IUpdateTask } from '../../Interfaces/IUpdateTask';
+import { countTasks } from './helpers/countTasks';
 
 export const TaskArea: FC = (): ReactElement => {
     const { error, isLoading, data, refetch } = useQuery(
@@ -50,6 +51,18 @@ export const TaskArea: FC = (): ReactElement => {
         });
     }
 
+    function markCompleteHandler(
+        e:
+            | React.MouseEvent<HTMLButtonElement>
+            | React.MouseEvent<HTMLAnchorElement>,
+        id: string,
+    ) {
+        updateTaskMutation.mutate({
+            id,
+            status: Status.completed,
+        });
+    }
+
     return (
         <Grid item md={8} px={4}>
             <Box mb={8} px={4}>
@@ -73,9 +86,39 @@ export const TaskArea: FC = (): ReactElement => {
                     xs={12}
                     mb={8}
                 >
-                    <TaskCounter />
-                    <TaskCounter />
-                    <TaskCounter />
+                    <TaskCounter
+                        count={
+                            data
+                                ? countTasks(
+                                      data,
+                                      Status.todo,
+                                  )
+                                : undefined
+                        }
+                        status={Status.todo}
+                    />
+                    <TaskCounter
+                        count={
+                            data
+                                ? countTasks(
+                                      data,
+                                      Status.inProgress,
+                                  )
+                                : undefined
+                        }
+                        status={Status.inProgress}
+                    />
+                    <TaskCounter
+                        count={
+                            data
+                                ? countTasks(
+                                      data,
+                                      Status.completed,
+                                  )
+                                : undefined
+                        }
+                        status={Status.completed}
+                    />
                 </Grid>
                 <Grid
                     item
@@ -108,41 +151,38 @@ export const TaskArea: FC = (): ReactElement => {
                             Array.isArray(data) &&
                             data.length > 0 &&
                             data.map((each, index) => {
-                                return (
+                                return each.status ===
+                                    Status.todo ||
                                     each.status ===
-                                        Status.todo ||
-                                    (each.status ===
-                                    Status.inProgress ? (
-                                        <Task
-                                            key={
-                                                index +
-                                                each.priority
-                                            }
-                                            id={each.id}
-                                            title={
-                                                each.title
-                                            }
-                                            date={
-                                                new Date(
-                                                    each.date,
-                                                )
-                                            }
-                                            description={
-                                                each.description
-                                            }
-                                            priority={
-                                                each.priority
-                                            }
-                                            status={
-                                                each.status
-                                            }
-                                            onStatusChange={
-                                                onStatusChangeHandler
-                                            }
-                                        />
-                                    ) : (
-                                        false
-                                    ))
+                                        Status.inProgress ? (
+                                    <Task
+                                        key={
+                                            index +
+                                            each.priority
+                                        }
+                                        id={each.id}
+                                        title={each.title}
+                                        date={
+                                            new Date(
+                                                each.date,
+                                            )
+                                        }
+                                        description={
+                                            each.description
+                                        }
+                                        priority={
+                                            each.priority
+                                        }
+                                        status={each.status}
+                                        onStatusChange={
+                                            onStatusChangeHandler
+                                        }
+                                        onClick={
+                                            markCompleteHandler
+                                        }
+                                    />
+                                ) : (
+                                    false
                                 );
                             })
                         )}
