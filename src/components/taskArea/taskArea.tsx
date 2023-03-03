@@ -10,7 +10,7 @@ import { TaskCounter } from '../taskCounter/taskCounter';
 import { Task } from '../task/task';
 import { useQuery } from '@tanstack/react-query';
 import { sendApiRequest } from '../../helpers/sendApiRequst';
-import { ITaskApi } from '../../Interfaces/ITAskApi';
+import { ITaskApi } from '../../Interfaces/ITaskApi';
 
 export const TaskArea: FC = (): ReactElement => {
     const { error, isLoading, data, refetch } = useQuery(
